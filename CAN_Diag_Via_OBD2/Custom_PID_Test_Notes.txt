@@ -1,0 +1,116 @@
+CAN_Diag_Via_OBD2 Ver2.17Tc
+Torque Custom PID bench test
+
+No motorcycle connection is required.
+
+============================================================
+CUSTOM PID 1 : Kawasaki Fuel Flow
+============================================================
+
+Torque -> Settings -> Manage extra PIDs/Sensors
+(or "Manage extra PIDs/Sensors" from the Realtime Information menu)
+Add custom PID.
+
+Use:
+
+OBD2 Mode and PID:
+  22F331
+
+Long Name:
+  Kawasaki Fuel Flow
+
+Short Name:
+  K-Fuel
+
+Minimum Value:
+  0
+
+Maximum Value:
+  30
+
+Scale factor:
+  x1
+
+Unit Type:
+  L/h
+
+Equation:
+  ((A*256)+B)/100
+
+Header:
+  leave blank for this bench emulator test
+
+Expected Arduino response:
+  62 F3 31 00 FA
+
+Torque should treat 00 FA as data bytes A/B:
+  0x00FA = 250
+  250/100 = 2.50 L/h
+
+
+============================================================
+CUSTOM PID 2 : Kawasaki Instant Fuel Economy
+============================================================
+
+OBD2 Mode and PID:
+  22F330
+
+Long Name:
+  Kawasaki Instant Fuel Economy
+
+Short Name:
+  K-FE
+
+Minimum Value:
+  0
+
+Maximum Value:
+  100
+
+Scale factor:
+  x1
+
+Unit Type:
+  km/L
+
+Equation:
+  ((A*256)+B)/10
+
+Header:
+  leave blank for this bench emulator test
+
+Expected Arduino response:
+  62 F3 30 00 C8
+
+Torque should treat 00 C8 as data bytes A/B:
+  0x00C8 = 200
+  200/10 = 20.0 km/L
+
+
+============================================================
+TEST PROCEDURE
+============================================================
+
+1. Upload Ver2.17Tc.
+2. Open Arduino USB Serial Monitor at 115200 baud.
+3. Connect Torque to the Bluetooth adapter.
+4. Add the two custom PIDs above.
+5. Add displays for:
+     Kawasaki Fuel Flow
+     Kawasaki Instant Fuel Economy
+6. Expected displays:
+     K-Fuel = 2.50 L/h
+     K-FE   = 20.0 km/L
+7. USB log should show:
+     RX BT: 22F331
+     TX BT: 62 F3 31 00 FA
+
+     RX BT: 22F330
+     TX BT: 62 F3 30 00 C8
+
+The old PID5E forced 1.00 L/h test is also retained, although Torque did
+not request 015E in the previous bench log.
+
+If the custom values do not appear, save the USB log.  The RX/TX lines will
+show whether the issue is Torque's PID request, header, or response-byte
+interpretation.

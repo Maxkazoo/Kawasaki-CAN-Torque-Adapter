@@ -1,0 +1,100 @@
+Ver2.15
+- Speed: 0x110 raw = 0.1 km/h.
+- Provisional fuel flow: 0x32F Data0:Data1 big-endian, 0.01 L/h/count.
+- Standard OBD PID 5E Engine Fuel Rate added.
+- Custom 22F330 returns instantaneous economy in 0.1 km/L.
+- Calibration constant is KDS_FUEL_FLOW_LPH_PER_COUNT in DataConversion.h.
+
+Calibration:
+NewK = OldK * (Torque economy / Meter economy)
+
+Example: Torque 24 km/L, meter 20 km/L:
+NewK = 0.01 * 24/20 = 0.012
+
+
+Ver2.16 maintenance / finalization changes
+------------------------------------------
+BLUE A0 now means "Torque application communication active".
+
+ON:
+  valid AT / Mode01 / Mode22 commands have been received within 2 seconds.
+
+OFF:
+  no Torque command for more than 2 seconds.
+
+This is intentionally different from the Bluetooth STATE indication.
+The radio can be connected while Torque is stopped.
+
+A new source file Maintenance_Notes.h documents:
+  project architecture
+  hardware pins
+  KWP IDs/commands
+  MCP2515 direct-register filter issue
+  Bluetooth dual-reader bug
+  Torque supported-PID bitmap discovery
+  fixed-slot KWP scheduler reason
+  conversion/calibration policy
+  function-by-function map
+
+Critical source files also contain expanded inline comments so the reasons
+behind unusual-looking implementation decisions remain visible later.
+
+
+Ver2.17 fuel-flow calibration
+-----------------------------
+Road comparison:
+  motorcycle meter = 18.0 km/L
+  Torque            = about 7.2 km/L
+
+Previous K = 0.01 L/h/count
+New K = 0.01 * 7.2 / 18.0 = 0.004 L/h/count
+
+Therefore:
+  FuelFlow [L/h] = 0x32F raw * 0.004
+
+This is the first meter-calibrated coefficient and should be checked at
+several steady-speed/load points before being treated as final.
+
+
+Ver2.19
+-------
+Fuel:
+  0x32F DLC=2 was observed in the direct Bluetooth logger.
+  Data0:Data1 BE16 remains the fuel-flow raw candidate.
+  Calibration coefficient remains 0.001 L/h/count for the next road
+  comparison.  Do not use Torque's standard calculated Fuel Flow as the
+  calibration reference; compare K-FE with the motorcycle meter.
+
+Gear:
+  Standard Mode01 PID A4 added using TriB's encoding:
+    N  -> 41 A4 01
+    1  -> 41 A4 11
+    2  -> 41 A4 21
+    3  -> 41 A4 31
+    4  -> 41 A4 41
+    5  -> 41 A4 51
+    6  -> 41 A4 61
+
+  Supported PID chain:
+    0140 -> 41 40 00 00 00 05   (5E + 60)
+    0160 -> 41 60 00 00 00 01   (80)
+    0180 -> 41 80 00 00 00 01   (A0)
+    01A0 -> 41 A0 10 00 00 00   (A4)
+
+  Custom 22F321 is retained in parallel.
+
+
+Ver2.20 - Torque transport change
+---------------------------------
+Bench comparison:
+- Private Mode 01 PID 01F0 followed 2.56 -> 5.12 -> 7.68 -> 10.24 reliably.
+- Mode 22 22F331 frequently produced [No response] or stale equation A/B
+  in Torque even when the complete 62F331 response was visible.
+
+Production mapping:
+  01F0 = K-Fuel, 0.01 L/h units
+  01F1 = K-FE,   0.1 km/L units
+  01A4 = Transmission Actual Gear
+
+Legacy Mode 22 handlers are retained but not recommended for the main Torque
+display path.
