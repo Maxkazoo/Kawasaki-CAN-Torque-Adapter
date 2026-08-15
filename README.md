@@ -18,7 +18,7 @@ An adapter using an Arduino Nano to display CAN data from a Kawasaki Concours 14
 - Displays metrics such as instantaneous fuel economy
 
 ## Wiring
-Please refer to the `Documentation` folder for wiring details.
+Please refer to the `Kawasaki KDS3 to OBD2.xlsx` for wiring details. (in Japanese)
 
 ## Usage
 1. Upload the sketch to the Arduino Nano
